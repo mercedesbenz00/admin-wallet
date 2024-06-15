@@ -2,13 +2,15 @@ import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, 
 
 export type AdminWalletConfig = {
     admin: Address,
-    minBalance: bigint
+    min_balance: bigint,
+    min_accept_amount: bigint,
 };
 
 export function adminWalletConfigToCell(config: AdminWalletConfig): Cell {
     return beginCell()
         .storeAddress(config.admin)
-        .storeUint(config.minBalance, 32)
+        .storeUint(config.min_balance, 32)
+        .storeUint(config.min_accept_amount, 32)
     .endCell();
 }
 

@@ -10,6 +10,7 @@ describe('AdminWallet', () => {
     beforeAll(async () => {
         code = await compile('AdminWallet');
         minBalanceAmount = toNano('0.5');
+        minAcceptAmount = toNano('2');
     });
 
     let blockchain: Blockchain;
@@ -18,6 +19,7 @@ describe('AdminWallet', () => {
     let admin: SandboxContract<TreasuryContract>;
     let user: SandboxContract<TreasuryContract>;
     let minBalanceAmount: bigint;
+    let minAcceptAmount: bigint;
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
@@ -26,7 +28,8 @@ describe('AdminWallet', () => {
 
         adminWallet = blockchain.openContract(AdminWallet.createFromConfig({
             admin: admin.address,
-            minBalance: minBalanceAmount,
+            min_balance: minBalanceAmount,
+            min_accept_amount: minAcceptAmount,
         }, code));
 
         deployer = await blockchain.treasury('deployer');
@@ -46,7 +49,7 @@ describe('AdminWallet', () => {
     }
 
     it('should send funds', async () => {
-        const sendAmount = toNano('2');
+        const sendAmount = minAcceptAmount + toNano('1');
 
         const userBalanceBefore = await user.getBalance();
 
@@ -66,8 +69,8 @@ describe('AdminWallet', () => {
         printTransactionFees(sendFundsResult.transactions);
     });
 
-    it('should throw 400 if msg_value is less than 2 TON', async() => {
-        const sendAmount = toNano('1');
+    it('should throw 400 if msg_value is less than min_accept_amount', async() => {
+        const sendAmount = minAcceptAmount - BigInt(1);
 
         const userBalanceBefore = await user.getBalance();
 
@@ -94,7 +97,7 @@ describe('AdminWallet', () => {
     });
 
     it ('should admin withdraw with balance > min_balance', async() => {
-        await sendUserFunds(toNano('2'));
+        await sendUserFunds(minAcceptAmount + toNano('1'));
 
         const adminWithdrawSendAmount = toNano('0.05');
         const adminWithdrawResult = await adminWallet.sendAdminWithdrawal(admin.getSender(), adminWithdrawSendAmount);

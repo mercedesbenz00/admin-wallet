@@ -2,6 +2,7 @@
 
 global slice admin_address;
 global int min_balance;
+global int min_accept_amount;
 
 const op::accept_funds = 0xa4d8086f;
 const op::admin_withdraw = 0x217e5898;
@@ -13,6 +14,7 @@ const billion = 1000 * million;
     slice cs = get_data().begin_parse();
     admin_address = cs~load_msg_addr();
     min_balance = cs~load_uint(32);
+    min_accept_amount = cs~load_uint(32);
     cs.end_parse();
 }
 
@@ -47,7 +49,7 @@ const billion = 1000 * million;
     load_data();
 
     if (op == op::accept_funds) {
-        throw_unless(400, msg_value >= 2 * billion);
+        throw_unless(400, msg_value >= min_accept_amount);
 
         return();
     }
