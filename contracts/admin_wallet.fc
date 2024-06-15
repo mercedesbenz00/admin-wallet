@@ -7,9 +7,6 @@ global int min_accept_amount;
 const op::accept_funds = 0xa4d8086f;
 const op::admin_withdraw = 0x217e5898;
 
-const million = 1000 * 1000;
-const billion = 1000 * million;
-
 () load_data() impure inline {
     slice cs = get_data().begin_parse();
     admin_address = cs~load_msg_addr();
