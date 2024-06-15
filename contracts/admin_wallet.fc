@@ -1,0 +1,66 @@
+#include "imports/stdlib.fc";
+
+global slice admin_address;
+global int min_balance;
+
+const op::accept_funds = 0xa4d8086f;
+const op::admin_withdraw = 0x217e5898;
+
+const million = 1000 * 1000;
+const billion = 1000 * million;
+
+() load_data() impure inline {
+    slice cs = get_data().begin_parse();
+    admin_address = cs~load_msg_addr();
+    min_balance = cs~load_uint(32);
+    cs.end_parse();
+}
+
+() send_empty_message(int amount, slice to, int mode) impure inline_ref {
+    cell msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(to)
+        .store_coins(amount)
+        .store_uint(0, 107)
+        .end_cell();
+    send_raw_message(msg, mode);
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    ;; skip if empty slice
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+
+    ;; skip if not bouncable
+    int flags = cs~load_uint(4);
+    if (flags & 1) {
+        return();
+    }
+
+    slice sender = cs~load_msg_addr();
+
+    int op = in_msg_body~load_uint(32);
+
+    load_data();
+
+    if (op == op::accept_funds) {
+        throw_unless(400, msg_value >= 2 * billion);
+
+        return();
+    }
+
+    if (op == op::admin_withdraw) {
+        throw_unless(404, equal_slices(sender, admin_address));
+        throw_unless(401, my_balance > min_balance);
+
+        int availableWidthdrawAmount = my_balance - min_balance;
+        send_empty_message(availableWidthdrawAmount, admin_address, 0);
+
+        return();
+    }
+
+    throw(0xffff);
+}
