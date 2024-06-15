@@ -3,7 +3,7 @@
 ## Description
 Smart contract - simple wallet for receiving funds from users. Later admin are able to withdraw all sent funds.
 
-### Smart Contract config:
+### Smart Contract parameters:
 - min_balance - minimal funds amount, which must be on the contract after withdrawal
 - min_accept_amount - minimal funds amount, which are accepted by the contract from users
 
